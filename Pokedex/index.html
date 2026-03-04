@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokédex</title>
+  </head>
+  <style>
+    .heading {
+      text-align: center;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .input {
+      padding: 10px;
+      font-size: 18px;
+      border: 2px solid #000;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #search {
+      padding: 5px;
+      /* text-align: center; */
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .pokemon {
+      margin-top: 20px;
+      text-align: center;
+      border: 2px solid black;
+      width: 500px;
+      height: 350px;
+      padding-bottom: 20px;
+    }
+
+    #pookie-img {
+      width: 500px;
+      /* text-align: center; */
+      height: 350px; /* Maintain aspect ratio */
+      transition: transform 0.2s ease;
+    }
+
+    #pookie-img:hover {
+      transform: scale(1.1); /* Optional: zoom effect on hover */
+    }
+  </style>
+  <body>
+    <h1 class="heading">POKEDEX</h1>
+    <input type="text" class="input" placeholder="Enter Pokémon name" />
+    <button id="search" onclick="getpookie()">Search</button>
+    <br />
+    <div class="pokemon">
+      <img id="pookie-img" alt="pokemon" />
+    </div>
+    <h2 class="id"></h2>
+    <h3 class="Pokemontype"></h3>
+    <h3 class="Evolution"></h3>
+    <h3 class="abilities"></h3>
+  </body>
+  <script>
+    const getpookie = async () => {
+      const pokemonName = document.querySelector(".input").value.toLowerCase();
+      try {
+        const res = await fetch(
+          `https://pokeapi.co/api/v2/pokemon/${pokemonName}`);
+        const data = await res.json(); 
+        //id of pokemon
+        const pokemonid=data.id;
+        document.querySelector(".id").innerText = `ID of the ${pokemonName}: ${pokemonid}`;
+        //image of pokemon
+        const imgurl = data.sprites.front_default;
+        document.querySelector("#pookie-img").src = imgurl;
+        //tilte of the document
+        document.title = `${pokemonName} Pokédex`;
+        //type of pokemon
+        const type = data.types.map((typeInfo) => typeInfo.type.name).join(", ").toUpperCase();
+        document.querySelector(".Pokemontype").innerText = `Type of the pokemon: ${type}`;
+        //evolution of pokemon
+        const speciesRes = await fetch(data.species.url);
+        const speciesData = await speciesRes.json();
+        const evolutionChainRes = await fetch(speciesData.evolution_chain.url);
+        const evolutionChainData = await evolutionChainRes.json();
+        let evolution = [];
+        for(let evo = evolutionChainData.chain; evo != null; evo = evo.evolves_to[0]) {
+          evolution.push(evo.species.name);
+        }
+        document.querySelector(".Evolution").innerText = `Evolution chain: ${evolution.join(" >> ")}`;
+        //abilities of pokemon
+        console.log("Abilities:", data.abilities.map(a => a.ability.name));
+        const abilities = data.abilities.map(a => a.ability.name).join(", ").toUpperCase();
+        document.querySelector(".abilities").innerText = `Abilities: ${abilities}`;
+        //availability of the pokemon
+        
+      } catch (error) {
+        document.querySelector("#pookie-img").src = "";
+        document.querySelector("#pookie-img").alt = "Pokémon not found!";
+        document.querySelector(".id").innerText = "";
+        document.querySelector(".Pokemontype").innerText = "";
+        document.querySelector(".Evolution").innerText = "";
+        document.querySelector(".abilities").innerText = "";
+        console.error("Error fetching Pokémon: ", error);
+
+      }
+    };
+  </script>
+</html>
